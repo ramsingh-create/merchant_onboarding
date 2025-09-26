@@ -9,6 +9,12 @@ import { toggleTheme } from './store/themeSlice'
 import ThemeToggle from './components/layout/ThemeToggle';
 import { Login } from './components/pages/Login';
 import Loader from './components/pages/Loader';
+import Drawer from './components/layout/Drawer';
+import DashBoard from './components/pages/DashBoard';
+import Rewards from './components/pages/Rewards';
+import Settings from './components/pages/Settings';
+import MyProfile from './components/pages/MyProfile';
+import SOA from './components/pages/SOA';
 
 function App() {
   const mode = useSelector((state: RootState) => state.theme.mode);
@@ -19,8 +25,15 @@ function App() {
     <div className={mode === 'dark' ? 'dark' : ''}>
       <Loader />
       <Router>
-        <Routes>
+        <Routes>  
           <Route path='/' element={<Login />} />
+          <Route path='/MyProfile' element={<MyProfile />} />
+          <Route path='/SOA' element={<SOA />} />
+          <Route element={<Drawer />}>
+            <Route path='/DashBoard' element={<DashBoard />} />
+            <Route path='/Rewards' element={<Rewards />} />
+            <Route path='/Settings' element={<Settings />} />
+          </Route>
         </Routes>
       </Router>
     </div>
