@@ -7,8 +7,9 @@ import { RootState } from './store/store';
 import { useDispatch } from 'react-redux';
 import { toggleTheme } from './store/themeSlice'
 import ThemeToggle from './components/layout/ThemeToggle';
-import { Login } from './components/pages/Login';
+import { UpFrontLanding } from './components/pages/UpFrontLanding';
 import Loader from './components/pages/Loader';
+import { LoginWithPin } from './components/pages/LoginWithPin';
 import Drawer from './components/layout/Drawer';
 import DashBoard from './components/pages/DashBoard';
 import Rewards from './components/pages/Rewards';
@@ -25,11 +26,13 @@ function App() {
     <div className={mode === 'dark' ? 'dark' : ''}>
       <Loader />
       <Router>
-        <Routes>  
-          <Route path='/' element={<Login />} />
+        <Routes>
+          
+          <Route path='/' element={<LoginWithPin />} />
           <Route path='/MyProfile' element={<MyProfile />} />
           <Route path='/SOA' element={<SOA />} />
           <Route element={<Drawer />}>
+          <Route path='/UpFrontLanding' element={<UpFrontLanding />} />
             <Route path='/DashBoard' element={<DashBoard />} />
             <Route path='/Rewards' element={<Rewards />} />
             <Route path='/Settings' element={<Settings />} />

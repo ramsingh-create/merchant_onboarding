@@ -3,7 +3,11 @@ module.exports = {
   content: ["./src/**/*.{js,ts,jsx,tsx}"],
   darkMode: 'class', // optional, for Redux-based theme toggling
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        montserrat: ['Montserrat', 'Helvetica', 'Arial', 'serif'],
+      },
+    },
   },
   plugins: [],
 }

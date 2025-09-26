@@ -1,6 +1,9 @@
+import { useNavigate } from "react-router-dom";
+
 const Settings = () => {
+    const navigate  = useNavigate()
     return (
-        <div>Settings</div>
+        <button onClick={() => navigate('/SOA')}>SOA</button>
     )
 }
 

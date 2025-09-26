@@ -90,10 +90,8 @@ const SOA: React.FC = () => {
                 console.log(response);
                 setApplicationList(response.getCustomerApplicationResponseList);
                 setApplicationSelected(response.getCustomerApplicationResponseList[0]);
-                // setLenderName(
-                //     JSONData.getCustomerApplicationResponseList[0].programLenderResp.lenderName
-                // );
-                fetchSOADocument();
+                setLenderName(response.getCustomerApplicationResponseList[0].programLenderResp.lenderName);
+                fetchSOADocument(response.getCustomerApplicationResponseList[0].applicationId);
             },
             failureCallBack: (error: any) => {
                 dispatch(routeChange('end'));
@@ -107,13 +105,13 @@ const SOA: React.FC = () => {
 
     };
 
-    const fetchSOADocument = () => {
+    const fetchSOADocument = (applicationId: number) => {
         dispatch(routeChange('start'));
 
         let url = "/googlecloudstorage/storage/document/fetch";
         let request = {
             id: app.customerID,
-            applicationId: applicationSelected?.applicationId,
+            applicationId: applicationId,
             type: "customer",
         };
 
@@ -122,7 +120,7 @@ const SOA: React.FC = () => {
                 dispatch(routeChange('end'));
 
                 const soaDocumentObject = response.documents.reverse().findLast((doc: any) => doc.docTypeId == 93);
-                loadImageFun(soaDocumentObject.documentUrl);
+                soaDocumentObject?.documentUrl && loadImageFun(soaDocumentObject.documentUrl);
             },
             failureCallBack: (error: any) => {
                 dispatch(routeChange('end'));
@@ -168,8 +166,8 @@ const SOA: React.FC = () => {
                             (app) => app.applicationId === e.target.value
                         );
                         setApplicationSelected(selected);
-                        setLenderName(selected.programLenderResp.lenderName);
-                        fetchSOADocument();
+                        setLenderName(selected?.programLenderResp?.lenderName);
+                        fetchSOADocument(selected?.applicationId);
                         console.log('Application changed:', selected);
                     }}
                 >
@@ -213,7 +211,7 @@ const SOA: React.FC = () => {
                     </div>
                 ) : (
                     <div className="mt-4">
-                        <div className="bg-white rounded-xl shadow p-6 text-center min-h-[180px]">
+                        <div className="bg-white rounded-xl shadow p-6 text-center content-center min-h-[180px]">
                             <div className="text-[#4328ae] font-semibold text-lg mb-3">
                                 Download SOA
                             </div>

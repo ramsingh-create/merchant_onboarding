@@ -19,9 +19,9 @@ const MyProfile: React.FC = () => {
     const [height, setHeight] = useState<number>(window.innerHeight);
     const [name, setName] = useState<string>('John Doe');
     const [mobno, setMobno] = useState<string>('9876543210');
-    const [customerWhatsappNumber, setCustomerWhatsappNumber] = useState<string>('9876543210');
-    const [emailId, setEmailId] = useState<string>('john@example.com');
-    const [address, setAddress] = useState<string>('123 Business Street, Mumbai');
+    const [customerWhatsappNumber, setCustomerWhatsappNumber] = useState<string>('__ __');
+    const [emailId, setEmailId] = useState<string>('__ __');
+    const [address, setAddress] = useState<string>('__ __');
     const [editFlag, setEditFlag] = useState<boolean>(false);
     const app = useSelector((state: RootState) => state.app)
     const navigate = useNavigate();
@@ -192,7 +192,7 @@ const MyProfile: React.FC = () => {
                             <div>
                                 <span className="text-[#4328ae]">Contact Number</span>
                                 <br />
-                                <span className="text-[#666666] text-base">+91 | {app.loginId?.slice(2)}</span>
+                                <span className="text-[#666666] text-base">+91 | {app.loginId?.slice(3)}</span>
                             </div>
                             <hr />
                             <div>
