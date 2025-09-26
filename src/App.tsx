@@ -16,6 +16,8 @@ import Rewards from './components/pages/Rewards';
 import Settings from './components/pages/Settings';
 import MyProfile from './components/pages/MyProfile';
 import SOA from './components/pages/SOA';
+import Calculator from './components/pages/Calculator';
+import PrivacyPolicy from './components/pages/PrivacyPolicy';
 
 function App() {
   const mode = useSelector((state: RootState) => state.theme.mode);
@@ -31,6 +33,8 @@ function App() {
           <Route path='/' element={<LoginWithPin />} />
           <Route path='/MyProfile' element={<MyProfile />} />
           <Route path='/SOA' element={<SOA />} />
+          <Route path='/Calculator' element={<Calculator />} />
+          <Route path='/PrivacyPolicy' element={<PrivacyPolicy />} />
           <Route element={<Drawer />}>
           <Route path='/UpFrontLanding' element={<UpFrontLanding />} />
             <Route path='/DashBoard' element={<DashBoard />} />
