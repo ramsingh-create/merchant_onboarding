@@ -109,6 +109,10 @@ export const UpFrontLanding: React.FC = () => {
     stagesFetch();
   }, []);
 
+  useEffect(() => {
+    DashboardApi()
+  }, [borrowerId])
+
   // // this useEffect to fetch bank details when component mounts
   // useEffect(() => {
   //   if (app.customerID && app.applicationId) {
@@ -478,6 +482,7 @@ export const UpFrontLanding: React.FC = () => {
       failureCallBack: (error: any) => {
         // handle error
         setAlert(true);
+        setAlertMessage(error.message)
         setLegalEntityType("Server Connection Failed");
         dispatch(routeChange('end'));
       }

@@ -33,6 +33,15 @@ import { RecentInvoices } from './components/pages/RecentInvoice';
 import {PanDetails} from './components/pages/PanDetails';
 import { CompanyBasicDetails } from './components/pages/CompanyBasicDetails';
 import { CompanyBusinessDetails } from './components/pages/CompanyBusinessDetails';
+import RewardsTransactionList from './components/pages/RewardTransactionList';
+import SelectSupplier from './components/pages/SelectSupplier';
+import BankMandateInfoInvoice from './components/pages/BankMandateInfoInvoice';
+import BankMandateSelect from './components/pages/BankMandateSelect';
+import BorrowerBankDetails from './components/pages/BorrowerBankDetails';
+import UploadInvoice from './components/pages/UploadInvoice';
+import AddInvoice from './components/pages/AddInvoice';
+import AllInvoices from './components/pages/AllInvoices';
+import AddSupplier from './components/pages/AddSupplier';
 function App() {
   const mode = useSelector((state: RootState) => state.theme.mode);
   const dispatch = useDispatch();
@@ -43,7 +52,6 @@ function App() {
       <Loader />
       <Router>
         <Routes>
-
           <Route path='/' element={<LoginWithPin />} />
           <Route path='/MyProfile' element={<MyProfile />} />
           <Route path='/SOA' element={<SOA />} />
@@ -59,6 +67,8 @@ function App() {
           <Route path='/FaqList' element={<FaqList />} />
           <Route path='/ChooseFinancePlan' element={<ChooseFinancePlan />} />
           <Route path='/RecentInvoice' element={<RecentInvoices />} />
+          <Route path='/RewardsTransactionList' element={<RewardsTransactionList />} />
+          <Route path='/AllInvoices' element={<AllInvoices />} />
           <Route path='/' element={<Drawer />}>
             <Route path='UpFrontLanding' element={<UpFrontLanding />} /> {/* Remove leading slash */}
             <Route path='DashBoard' element={<DashBoard />} />
@@ -70,6 +80,13 @@ function App() {
             <Route path='/BusinessDetails' element={<BusinessDetails/>} />
             <Route path='/CompanyBasicDetails' element={<CompanyBasicDetails/>} />
             <Route path='/CompanyBusinessDetails' element={<CompanyBusinessDetails/>} />
+            <Route path='/SelectSupplier' element={<SelectSupplier />} />
+            <Route path='/BankMandateInfoInvoice' element={<BankMandateInfoInvoice />} />
+            <Route path='/BankMandateSelect' element={<BankMandateSelect />} />
+            <Route path='/BorrowerBankDetails' element={<BorrowerBankDetails />} />
+            <Route path='/UploadInvoice' element={<UploadInvoice />} />
+            <Route path='/AddInvoice' element={<AddInvoice />} />
+            <Route path='/AddSupplier' element={<AddSupplier />} />
           </Route>
         </Routes>
       </Router>
