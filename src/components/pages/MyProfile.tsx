@@ -28,7 +28,7 @@ const MyProfile: React.FC = () => {
     const dispatch = useDispatch();
 
     const goBack = () => {
-        navigate(-1)
+        navigate(-1);
     };
 
     const dial = () => {
@@ -103,7 +103,7 @@ const MyProfile: React.FC = () => {
         let url = "/supermoney-service/customer/profile";
         let request = {
             loginId: app.loginId,
-            applicationId: app.applicationId,
+            applicationId: +app.applicationId!,
         };
 
         const options = {

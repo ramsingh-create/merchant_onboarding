@@ -14,10 +14,13 @@ import RewardsIAPurple from '../../assets/images/rewardsiapurple.png';
 import SettingsActive from '../../assets/images/settings.png';
 import SettingsInactive from '../../assets/images/settingsinactive.png';
 import SettingsIAPurple from '../../assets/images/settingsiapurple.png';
+import { useDispatch } from 'react-redux';
+import { setActiveTab } from '../../store/appSlice';
 
 const Drawer: React.FC = () => {
     const navigate = useNavigate();
-    const [tabSelected, setTabSelected] = useState<'home' | 'dashboard' | 'rewards' | 'settings'>('home');
+    const activeTab = localStorage.getItem('activeTab') || 'home' as string;
+    const [tabSelected, setTabSelected] = useState<'home' | 'dashboard' | 'rewards' | 'settings'>(activeTab as any);
     const [alertMessage, setAlertMessage] = useState('');
     const [alertVisible, setAlertVisible] = useState(false);
     const [isMobile, setIsMobile] = useState(true);
@@ -26,6 +29,7 @@ const Drawer: React.FC = () => {
     const [pageBackground, setPageBackground] = useState('#311b92');
     const [notificationColor, setNotificationColor] = useState('#FFFFFF');
     const [inActiveColor, setInActiveColor] = useState('#7E67DA');
+    const dispatch = useDispatch();
 
     useEffect(() => {
         const userAgent = navigator.userAgent;
@@ -97,7 +101,10 @@ const Drawer: React.FC = () => {
                 {['home', 'dashboard', 'rewards', 'settings'].map((tab) => (
                     <button
                         key={tab}
-                        onClick={() => setTabSelected(tab as any)}
+                        onClick={() => {
+                            setTabSelected(tab as any);
+                            dispatch(setActiveTab(tab));
+                        }}
                         className="flex flex-col items-center"
                     >
                         <img

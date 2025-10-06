@@ -30,7 +30,7 @@ const SOA: React.FC = () => {
 
     const goBack = () => {
         console.log('Go back clicked');
-        navigate(-1);
+        navigate('/Settings')
     };
 
     const dial = () => {
@@ -81,7 +81,7 @@ const SOA: React.FC = () => {
 
         let url = "/supermoney-service/customer/application/get";
         let request = {
-            customerId: app.customerID,
+            customerId: +app.customerID!,
         };
 
         const options = {
@@ -110,7 +110,7 @@ const SOA: React.FC = () => {
 
         let url = "/googlecloudstorage/storage/document/fetch";
         let request = {
-            id: app.customerID,
+            id: +app.customerID!,
             applicationId: applicationId,
             type: "customer",
         };

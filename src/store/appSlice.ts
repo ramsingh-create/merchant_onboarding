@@ -18,6 +18,7 @@ interface AppState {
   supplierList: string | null;
   leadID: string | null;
   digioSelected: string | null;
+  activeTab: string | null;
 }
 
 const getLocal = (key: string) => localStorage.getItem(key);
@@ -39,7 +40,8 @@ const initialState: AppState = {
   currentMillis: getLocal('currentMillis'), //
   supplierList: getLocal('supplierList'), //
   leadID: getLocal('leadID'), //
-  digioSelected: getLocal('digioSelected'), //
+  digioSelected: getLocal('digioSelected'),
+  activeTab: getLocal('activeTab') //
 };
 
 const appSlice = createSlice({
@@ -117,6 +119,10 @@ const appSlice = createSlice({
       state.digioSelected = action.payload;
       localStorage.setItem("digioSelected", action.payload);
     },
+    setActiveTab(state, action: PayloadAction<string>){
+      state.activeTab = action.payload;
+      localStorage.setItem('activeTab', action.payload)
+    }
   },
 });
 
@@ -139,6 +145,7 @@ export const {
   setSupplierList,
   setLeadID,
   setDigioSelected,
+  setActiveTab
 } = appSlice.actions;
 
 export default appSlice.reducer;

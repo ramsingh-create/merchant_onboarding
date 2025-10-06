@@ -1,12 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 // import { useRouter } from 'next/router';
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Phone, ChevronDown, Download, Search } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
+import { routeChange, setLegalEntityType, setWorkFlowID } from '../../store/appSlice';
+import { makeAPIPOSTRequest } from '../../utils/apiActions';
 import upFrontBanner from "../../assets/images/upfrontbanner.png";
 import documentUpFront from "../../assets/images/documentupfront.png";
 import applicationFail from "../../assets/images/applicationfail.png";
 import uploadDocumentThankyou from "../../assets/images/uploaddocumentthankyou.png";
 import statusIcon from "../../assets/images/statusicon.png";
+import {
+  setAuthToken,
+  setLoginId,
+  setCustomerID,
+  setApplicationId,
+  setCompanyName,
+  setOnboardingName
+} from '../../store/appSlice';
+
+declare const JSBridge: {
+  call: (number: string) => void;
+  redirectToBrowser: (url: string) => void;
+}
 
 // Types
 interface OnboardingStep {
@@ -26,7 +44,7 @@ interface CustomerProfile {
   companyType: string;
   name: string;
   panNumber: string;
-  borrowerId: string;
+  borrowerId: "";
 }
 
 interface CreditLimit {
@@ -39,7 +57,9 @@ interface CreditLimit {
 export const UpFrontLanding: React.FC = () => {
   // const router = useRouter();
   const navigate = useNavigate();
-  
+  const dispatch = useDispatch();
+  const app = useSelector((state: RootState) => state.app);
+
   // State variables
   const [currentStep, setCurrentStep] = useState<string>('');
   const [onboardingSteps, setOnboardingSteps] = useState<OnboardingStep[]>([]);
@@ -51,7 +71,9 @@ export const UpFrontLanding: React.FC = () => {
   const [availableLimit, setAvailableLimit] = useState<number>(0);
   const [utilizedLimit, setUtilizedLimit] = useState<number>(0);
   const [availablePercentage, setAvailablePercentage] = useState<number>(0);
-  
+  const [activeBankFlag, setActiveBankFlag] = useState<boolean>(false);
+  const [activeMandateFlag, setActiveMandateFlag] = useState<boolean>(false);
+
   // UI state flags
   const [payNowCard, setPayNowCard] = useState<boolean>(false);
   const [name, setName] = useState<string>('');
@@ -70,18 +92,10 @@ export const UpFrontLanding: React.FC = () => {
   const [programName, setProgramName] = useState<string>('');
   const [invoiceUploadAvailable, setInvoiceUploadAvailable] = useState<boolean>(true);
   const [mandateType, setMandateType] = useState<string>('');
-
-  // Mock store values (replace with actual store implementation)
-  const store = {
-    getters: {
-      onboardingName: 'Partner Name',
-      applicationId: '12345',
-      companyName: 'Default Company',
-      customerID: 'customer123',
-      profileID: 'profile123',
-      loginId: 'user123'
-    }
-  };
+  const [borrowerName, setBorrowerName] = useState("");
+  const [borrowerId, setBorrowerId] = useState("");
+  const [onboardingStage, setOnboardingStage] = useState("");
+  const [currentApplication, setCurrentApplication] = useState(null);
 
   // Calculate available percentage
   useEffect(() => {
@@ -95,40 +109,381 @@ export const UpFrontLanding: React.FC = () => {
     stagesFetch();
   }, []);
 
+  // // this useEffect to fetch bank details when component mounts
+  // useEffect(() => {
+  //   if (app.customerID && app.applicationId) {
+  //     getbankDetails();
+  //   }
+  // }, [app.customerID, app.applicationId]);
+
   // API Methods
-  const stagesFetch = async () => {
-    try {
-      // Implementation would go here
-      setLandingCard(true);
-      fetchApplicationId();
-      fetchApplicationFinancePlan();
-      customerProfile();
-    } catch (error) {
-      console.error('Error fetching stages:', error);
+  const stagesFetch = () => {
+    dispatch(routeChange('start'));
+
+    let request = {
+      customerId: app.customerID,
+      profileId: app.profileID,
+      applicationId: app.applicationId,
+      stageName: "Onboarding",
+    };
+    const options = {
+      successCallBack: (res: any) => {
+        dispatch(routeChange('end'));
+        console.log("Nitin" + JSON.stringify(res));
+        if (res.data.length > 0) {
+          setLandingCard(false);
+          let stage = res.data[0];
+          // self.onboardingStage = stage.stageStatus;
+          if (
+            stage.stageStatus == "CREATED" ||
+            stage.stageStatus == "IN_PROGRESS"
+          ) {
+            dispatch(setWorkFlowID(res.workFlowId))
+            setCompleteKYCCard(true);
+          } else {
+            setCompleteKYCCard(false);
+            stagesFetchKYC();
+          }
+        } else {
+          // self.landingCard = true;
+          setLandingCard(true);
+        }
+        fetchApplicationId();
+        fetchApplicationFinancePlan();
+        customerProfile();
+      },
+      failureCallBack: (error: any) => {
+        // handle error
+        console.log("display  ==" + error);
+      }
     }
+    makeAPIPOSTRequest('/supermoney-service/stage/fetch', {}, request, options);
   };
 
-  const fetchApplicationId = async () => {
+  const stagesFetchKYC = () => {
+    dispatch(routeChange('start'));
+
+    let request = {
+      customerId: app.customerID,
+      profileId: app.profileID,
+      stageName: "KYC",
+      applicationId: app.applicationId,
+    };
+
+    const options = {
+      successCallBack: (res: any) => {
+        dispatch(routeChange('end'));
+        console.log(res);
+        if (res.data.length > 0) {
+          let stage = res.data[0];
+          if (stage.stageStatus == "COMPLETED") setKycStatus("Approved");
+          else if (stage.stageStatus == "REJECTED")
+            setKycStatus("Rejected");
+          else setKycStatus("In Process");
+          if (
+            stage.stageStatus == "COMPLETED" &&
+            !["PALODD", "SMARTDUKAAN", "WABI2B"].includes(app.companyName!)
+          ) {
+            setOnboardingJourneyCompleteCard(false);
+            stagesFetchCredit();
+          } else {
+            stagesFetchCredit();
+            setOnboardingJourneyCompleteCard(true);
+          }
+        } else {
+          setCompleteKYCCard(true);
+        }
+      },
+      failureCallBack: (error: any) => {
+        console.log(error);
+        dispatch(routeChange('end'));
+      }
+    }
+    makeAPIPOSTRequest('/supermoney-service/stage/fetch', {}, request, options);
+  }
+
+  const stagesFetchCredit = () => {
+    dispatch(routeChange('start'));
+    let request = {
+      applicationId: app.applicationId,
+      customerId: app.customerID,
+      profileId: app.profileID,
+      stageName: "CREDIT",
+    };
+
+    const options = {
+      successCallBack: (res: any) => {
+        dispatch(routeChange('end'));
+        console.log(res);
+        if (res.data.length > 0) {
+          setLandingCard(false);
+          let stage = res.data[0];
+          if (stage.stageStatus == "APPROVED_BY_LENDER")
+            setCreditStatus("Approved");
+          else if (stage.stageStatus == "REJECTED_BY_LENDER")
+            setCreditStatus("Rejected");
+          else setCreditStatus("In Process");
+          if (stage.stageStatus == "APPROVED_BY_LENDER") {
+            setOnboardingJourneyCompleteCard(false);
+            setUtilizationCard(true);
+            creditLimit();
+          } else {
+            setOnboardingJourneyCompleteCard(true);
+          }
+        } else {
+          setOnboardingJourneyCompleteCard(true);
+        }
+      },
+      failureCallBack: (error: any) => {
+        // handle error
+        console.log("display  ==" + error);
+      }
+    }
+    makeAPIPOSTRequest('/supermoney-service/stage/fetch', {}, request, options);
+  }
+
+  const creditLimit = () => {
+    dispatch(routeChange('start'));
+    let custId = Number(app.customerID);
+
+    let data = {
+      applicationId: Number(app.applicationId),
+      customerId: custId,
+    };
+
+    const options = {
+      successCallBack: (res: any) => {
+        setTotalLimit(res.totalCreditLimit);
+        setUtilizedLimit(res.utilizedCreditLimit);
+        setAvailableLimit(res.unutilizedCreditLimit);
+        // setAvailablePercentage(parseInt(
+        //   (self.availableLimit / self.totalLimit) * 100
+        // ));
+        DashboardApi();
+
+        dispatch(routeChange('end'));
+      },
+      failureCallBack: (error: any) => {
+        // handle error
+        console.log("display  ==" + error);
+        DashboardApi();
+        dispatch(routeChange('end'));
+      }
+    }
+    makeAPIPOSTRequest('credit-analytics-service/application/creditlimit/get', {}, data, options);
     // API implementation
-    setProgramName('Sample Program');
-    setInvoiceUploadAvailable(true);
   };
 
-  const fetchApplicationFinancePlan = async () => {
-    // API implementation
+  const fetchApplicationId = () => {
+    dispatch(routeChange('start'));
+
+    let request = {
+      customerId: app.customerID,
+      applicationId: app.applicationId,
+    };
+
+    const options = {
+      successCallBack: (res: any) => {
+        dispatch(routeChange('end'));
+        console.log(res);
+        setProgramName(res.getCustomerApplicationResponseList[0].programDetails.programName);
+        setInvoiceUploadAvailable(res.getCustomerApplicationResponseList[0].programDetails.invoiceUploadAvailable);
+        setWorkflowID(res.getCustomerApplicationResponseList[0].programDetails.workflowId);
+        setMandateType(res.getCustomerApplicationResponseList[0].programDetails.mandateTypeAllowed);
+      },
+      failureCallBack: (error: any) => {
+        // handle error
+        console.log("display  ==" + error);
+      }
+    }
+    makeAPIPOSTRequest('/supermoney-service/customer/application/get', {}, request, options);
   };
 
-  const customerProfile = async () => {
+  const fetchApplicationFinancePlan = () => {
     // API implementation
-    setName('John Doe');
+    dispatch(routeChange('start'));
+
+    let request = {
+      applicationId: app.applicationId,
+    };
+
+    const options = {
+      successCallBack: (res: any) => {
+        dispatch(routeChange('end'));
+        console.log(res);
+        setFinancePlan(res.getApplicationFinancePlanMappingResp[0])
+
+      },
+      failureCallBack: (error: any) => {
+        // handle error
+        console.log("display  ==" + error);
+      }
+    }
+    makeAPIPOSTRequest('/supermoney-service/application/finance/get', {}, request, options);
   };
 
-  const creditLimit = async () => {
+  const customerProfile = () => {
     // API implementation
-    setTotalLimit(50000);
-    setAvailableLimit(35000);
-    setUtilizedLimit(15000);
+    dispatch(routeChange('start'));
+
+    let request = {
+      loginId: app.loginId,
+      applicationId: app.applicationId,
+    };
+
+    const options = {
+      successCallBack: (res: any) => {
+        dispatch(routeChange('end'));
+        if (res.errorMessage === "" || res.errorMessage === null) {
+          setCustomerType(res.companyType);
+          let name = res.name;
+
+          if (name.length > 0) {
+            setName(name.split(" ")[0]);
+          }
+
+          setBorrowerId(res.borrowerId)
+          setBorrowerName(res.name);
+          if (
+            res.borrowerId === "" && (onboardingStage == "INFORMATION_PROVIDED" || onboardingStage == "BE_MANUALSTEP")
+          ) {
+            createBorrower(res.panNumber);
+          }
+        } else {
+          setAlert(true);
+          setAlertMessage(res.errorMessage);
+        }
+      },
+      failureCallBack: (error: any) => {
+        // handle error
+        console.log("display  ==" + error);
+      }
+    }
+    makeAPIPOSTRequest('/supermoney-service/customer/profile', {}, request, options);
+    // setName('John Doe');
   };
+
+  const createBorrower = (panNumber: string) => {
+    dispatch(routeChange('start'));
+
+    let data = {
+      invoiceType: "createBorrower",
+      request: {
+        companyName: app.companyName,
+        supplierId:
+          app.companyName == "YARAELECTRONICS"
+            ? "200076"
+            : "",
+        planCode: "0@JIO_INAUGRAL",
+        supplierBankDetailId:
+          app.companyName == "YARAELECTRONICS" ? "1" : "",
+        name: borrowerName,
+        phoneNumber: app.loginId,
+        email: "",
+        pan: panNumber,
+        gstinNumber: "",
+        company: app.companyName,
+        onboardingPartner: app.onboardingName,
+        ifsc: "",
+        bankAccountNo: "",
+        applicationId: app.applicationId,
+        externalId: JSON.stringify(parseInt(app.customerID as string)),
+      },
+    };
+    let msgHeader = {
+      authToken: localStorage.getItem("authtoken"), //dynamic
+      loginId: app.loginId,
+      channelType: "M",
+      consumerId: "414",
+      deviceId: "BankMandate",
+      source: "WEB",
+    };
+    let deviceFPmsgHeader = {
+      clientIPAddress: "192.168.0.122",
+      connectionMode: "WIFI",
+      country: "United States",
+      deviceManufacturer: "Xiaomi",
+      deviceModelNo: "Mi A2",
+      dualSim: false,
+      imeiNo: "09d9212a07553637",
+      latitude: "",
+      longitude: "",
+      nwProvider: "xxxxxxxx",
+      osName: "Android",
+      osVersion: 28,
+      timezone: "Asia/Kolkata",
+      versionCode: "58",
+      versionName: "5.5.1",
+    };
+
+    let employeeDetails = { data, deviceFPmsgHeader, msgHeader };
+
+    const options = {
+      successCallBack: (res: any) => {
+        let hostStatus = res.data.successFlag;
+
+        if (hostStatus === true) {
+          dispatch(routeChange('end'));
+          dispatch(setAuthToken(res.token));
+          setBorrowerId(res.data.details.borrowerId);
+        } else {
+          if (res.header.hostStatus === "E") {
+            setAlertMessage(res.header.error.errorDesc);
+            setAlert(true);
+          } else {
+            setAlertMessage(res.data.details.errors[0]);
+            setAlert(true);
+          }
+          dispatch(routeChange('end'));
+        }
+      },
+      failureCallBack: (error: any) => {
+        // handle error
+        console.log("display  ==" + error);
+      }
+    }
+    makeAPIPOSTRequest('/mintLoan/mintloan/invoiceFinancing', {}, employeeDetails, options);
+  }
+
+  const DashboardApi = () => {
+    let data = {
+      countFrom: 0,
+      countTo: 20,
+      companyName: app.companyName,
+      borrowerId: borrowerId
+    };
+
+    const options = {
+      successCallBack: (res: any) => {
+        if (res.invoiceDetails != undefined) {
+          setUtilizationCard(false);
+          setUtilizationCardUtilized(true);
+          setInvoiceCard(true);
+
+          if (res.invoiceDetails.APPROVED.length > 0) {
+            setPayNowCard(true);
+          } else {
+            setPayNowCard(false);
+          }
+        } else {
+          setUtilizationCardUtilized(false);
+          setUtilizationCard(true);
+          if (invoiceUploadAvailable) {
+            setSheet(true);
+          }
+          setInvoiceCard(false);
+          setPayNowCard(false);
+        }
+      },
+      failureCallBack: (error: any) => {
+        // handle error
+        setAlert(true);
+        setLegalEntityType("Server Connection Failed");
+        dispatch(routeChange('end'));
+      }
+    }
+    makeAPIPOSTRequest('/invoice-finance-services/invoice-services/finance/invoices/get/borrower', {}, data, options);
+  }
 
   // Navigation methods
   const redirectToBusinessDetails = () => {
@@ -141,15 +496,102 @@ export const UpFrontLanding: React.FC = () => {
 
   const redirectToDashBoard = () => {
     setSheet(false);
-    navigate("/SelectSupplier");
+    if (availableLimit === 0) {
+      setAlert(true);
+      setAlertMessage("Credit Limit Is currently Not Available For This Account. Please Try After Sometime");
+    } else {
+      if (activeBankFlag === true && activeMandateFlag === true) {
+        const queryParams = new URLSearchParams({
+          borrowerId: borrowerId,
+          borrowerName: borrowerName,
+          availableLimit: availableLimit.toString(),
+          applicationId: app?.applicationId || '',
+          companyName: app.companyName as string
+        }).toString();
+
+        navigate(`/SelectSupplier?${queryParams}`);
+
+      } else {
+        if (
+          activeMandateFlag === false &&
+          activeBankFlag === true
+        ) {
+          if (mandateType == "others") {
+            const queryParams = new URLSearchParams({
+              borrowerId: borrowerId,
+              borrowerName: borrowerName,
+              availableLimit: availableLimit.toString(),
+              applicationId: app?.applicationId || '',
+              companyName: app.companyName as string
+            }).toString();
+
+            navigate(`/BankMandateInfoInvoice?${queryParams}`);
+
+          } else {
+            const queryParams = new URLSearchParams({
+              borrowerId: borrowerId,
+              borrowerName: borrowerName,
+              availableLimit: availableLimit.toString(),
+              applicationId: app?.applicationId || '',
+              companyName: app.companyName as string
+            }).toString();
+
+            navigate(`/UPIMandateInfoInvoice?${queryParams}`);
+          }
+        } else {
+          const queryParams = new URLSearchParams({
+            borrowerId: borrowerId,
+            borrowerName: borrowerName,
+            availableLimit: availableLimit.toString(),
+            applicationId: app?.applicationId || '',
+          companyName: app.companyName as string
+          }).toString();
+
+          navigate(`/BorrowerBankDetails?${queryParams}`);
+        }
+      }
+    }
   };
 
   const redirectToRecentInvoices = () => {
-    navigate("/RecentInvoice");
+     const queryParams = new URLSearchParams({
+            borrowerId: borrowerId,
+            applicationId: app?.applicationId || '',
+          }).toString();
+    navigate(`/RecentInvoice?${queryParams}`);
   };
 
   const redirectToPayment = () => {
-    navigate("/Payment");
+    dispatch(routeChange('start'));
+
+    let data = {
+      customerId: app.customerID,
+    };
+
+    const options = {
+      successCallBack: (res: any) => {
+        try {
+          // @ts-ignore
+          JSBridge.redirectToBrowser(
+            res.url +
+            "&applicationId=" +
+            app.applicationId
+          );
+        } catch (err) {
+          window.location.href =
+            res.url +
+            "&applicationId=" +
+            app.applicationId;
+        }
+
+      },
+      failureCallBack: (error: any) => {
+        // handle error
+        console.log("display  ==" + error);
+        dispatch(routeChange('end'));
+      }
+    }
+    makeAPIPOSTRequest('supermoney-service/generatePaymentIdV2', {}, data, options);
   };
 
   const openStatusSheet = () => setStatusSheet(true);
@@ -157,21 +599,231 @@ export const UpFrontLanding: React.FC = () => {
   const closeBottomSheet = () => setSheet(false);
 
   const dial = () => {
-    const number = store.getters.companyName === "NETMEDS" || store.getters.companyName === "JIOMART" 
-      ? "02269516677" 
+    const number = app.companyName === "NETMEDS" || app.companyName === "JIOMART"
+      ? "02269516677"
       : "9920111300";
     window.open(`tel:${number}`, '_self');
   };
 
   const workFlowStatus = () => {
-    navigate("/BusinessDetails");
+    console.log("This function is not call")
+    dispatch(routeChange('start'));
+
+    let data = {
+      workflowApiType: "status",
+      request: {
+        customerId: app.customerID,
+        profileId: app.profileID,
+        company: app.companyName,
+        workFlowType: "Onboarding",
+      },
+    };
+
+    let msgHeader = {
+      authToken: localStorage.getItem("authtoken"),
+      loginId: app.loginId,
+      channelType: "M",
+      consumerId: "414",
+      deviceId: "MerchantWebApp",
+      source: "WEB",
+    };
+
+    let deviceFPmsgHeader = {
+      clientIPAddress: "192.168.0.122",
+      connectionMode: "WIFI",
+      country: "United States",
+      deviceManufacturer: "Xiaomi",
+      deviceModelNo: "Mi A2",
+      dualSim: false,
+      imeiNo: "09d9212a07553637",
+      latitude: "",
+      longitude: "",
+      nwProvider: "xxxxxxxx",
+      osName: "Android",
+      osVersion: 28,
+      timezone: "Asia/Kolkata",
+      versionCode: "58",
+      versionName: "5.5.1",
+    };
+
+    let createWorkflowRequest = { data, deviceFPmsgHeader, msgHeader };
+
+    const options = {
+      successCallBack: (res: any) => {
+        dispatch(routeChange('end'));
+        dispatch(setAuthToken(res.header.authToken));
+        if (res.data.successFlag) {
+          dispatch(setWorkFlowID(res.data.details.businessKey));
+          if (res.data.details.tasks.length > 0) {
+            const taskKey = res.data.details.tasks[0].taskDefinitionKey;
+            setCurrentStep(taskKey);
+            setWorkflowID(res.data.details.workflowName);
+
+            // Route based on task definition key
+            const routeMap: { [key: string]: string } = {
+              'INPANDOB': '/BusinessDetails',
+              'INPANDOBPARTNER': '/BusinessDetails',
+              'DOB': '/DOBDetails',
+              'DIGILOCKER': '/EKyc',
+              'GETPHYSICALAADHAAR': '/AadhaarSign',
+              'UDYOGAADHAAR': '/UdyoogAadhaar',
+              'ADDRESS_DETAILS': '/AddressDetails',
+              'SUPPLIER_DETAILS': '/OnboardingSupplierList',
+              'BUSINESSPROOFS': '/ProofOfBusinessSelector',
+              'BUSINESSPROOFS_OPTIONAL': '/ProofOfBusinessSelector',
+              'SELFIEPHOTOGRAPH': '/Selfie',
+              'REFERENCE_DETAILS': '/ReferenceDetails',
+              'APPLICATION_APPROVAL': '/BreWaitingScreen',
+              'LOANAGREEMENT': '/LoanAgreement',
+              'BANKDETAILS': '/BankDetailsOnboarding',
+              'MANDATE': '/BankMandateInfo',
+              'MANDATE_OPTIONAL': '/BankMandateInfo',
+              'UPIMANDATE': '/UPIMandateInfoOnboarding',
+              'UPIMANDATE_OPTIONAL': '/UPIMandateInfoOnboarding',
+              'GST_RETURN': '/GSTDetails',
+              'BANK_STATEMENT_ONBOARDING': '/BankStatementPage',
+              'BUSINESS_BASIC_DETAILS': '/BusinessDetails',
+              'BUSINESS_ADDITIONAL_DETAILS': '/CompanyBusinessDetails',
+              'OWNERSHIP_PARTNER_BASIC_DETAILS': '/CompanyPartnerShipDetails',
+              'OWNERSHIP_COMPANY_BASIC_DETAILS': '/CompanyShareHoldingDetails',
+              'OWNERSHIP_ADDITIONAL_DETAILS': '/BusinessOfficeDetails',
+              'PARTNER_BUSINESS_BANK_DETAILS': '/PartnerPreThankYou',
+              'COMPANY_BUSINESS_BANK_DETAILS': '/CompanyPreThankYou',
+              'PARTNERSHIP_DEED': '/UploadPartnershipDeed',
+              'CERTIFICATE_OF_INCORPORATION': '/UploadCertificateOfCorporation',
+              'ITR': '/UploadITR',
+              'GST_DETAILS': '/UploadGSTDetails',
+              'AUDITED_FINANCIAL_STATEMENT': '/UploadAuditedFinancialStatement',
+              'BUSINESS_KYC': '/UploadBusinessKYC',
+              'DIRECTOR_KYC': '/UploadDirectorKYC',
+            };
+
+            const route = routeMap[taskKey];
+            if (route) {
+              navigate(route);
+            }
+          }
+        }
+      },
+      failureCallBack: (error: any) => {
+        console.log("display  ==" + error);
+        dispatch(routeChange('end'));
+      }
+    }
+    makeAPIPOSTRequest('/mintLoan/mintloan/workflow', {}, createWorkflowRequest, options);
   };
 
+  // const getbankDetails = () => {
+  //   dispatch(routeChange('start'));
+
+  //   let data = {
+  //     applicationId: app.applicationId,
+  //   };
+
+  //   let msgHeader = {
+  //     authToken: localStorage.getItem("authtoken"),
+  //     loginId: app.loginId,
+  //     channelType: "M",
+  //     consumerId: "414",
+  //     deviceId: "BankMandate",
+  //     source: "WEB",
+  //   };
+
+  //   let deviceFPmsgHeader = {
+  //     clientIPAddress: "192.168.0.122",
+  //     connectionMode: "WIFI",
+  //     country: "United States",
+  //     deviceManufacturer: "Xiaomi",
+  //     deviceModelNo: "Mi A2",
+  //     dualSim: false,
+  //     imeiNo: "09d9212a07553637",
+  //     latitude: "",
+  //     longitude: "",
+  //     nwProvider: "xxxxxxxx",
+  //     osName: "Android",
+  //     osVersion: 28,
+  //     timezone: "Asia/Kolkata",
+  //     versionCode: "58",
+  //     versionName: "5.5.1",
+  //   };
+
+  //   let employeeDetails = { data, deviceFPmsgHeader, msgHeader };
+
+  //   const options = {
+  //     successCallBack: (res: any) => {
+  //       let hostStatus = res.header.hostStatus;
+  //       if (hostStatus === "S" || hostStatus === "s") {
+  //         dispatch(setAuthToken(res.header.authToken));
+  //         const userBankList = res.data.userBankList;
+  //         if (userBankList.length != 0) {
+  //           let activeBank = false;
+  //           userBankList.forEach((item: any) => {
+  //             if (item.defaultFlag === true) {
+  //               activeBank = true;
+  //             }
+  //           });
+  //           setActiveBankFlag(activeBank);
+  //           getMandateDetails();
+  //         } else {
+  //           setActiveBankFlag(false);
+  //           setActiveMandateFlag(false);
+  //         }
+  //         dispatch(routeChange('end'));
+  //       } else {
+  //         if (res.header.hostStatus === "E") {
+  //           setAlertMessage(res.header.error.errorDesc);
+  //           setAlert(true);
+  //         } else {
+  //           setAlertMessage(res.data.errorDetails[0].errorDesc);
+  //           setAlert(true);
+  //         }
+  //         dispatch(routeChange('end'));
+  //       }
+  //     },
+  //     failureCallBack: (error: any) => {
+  //       console.log("display  ==" + error);
+  //       dispatch(routeChange('end'));
+  //     }
+  //   }
+  //   makeAPIPOSTRequest('/mintLoan/mintloan/getActiveBankAccountDetailsV2', {}, employeeDetails, options);
+  // };
+
+  // const getMandateDetails = () => {
+  //   dispatch(routeChange('start'));
+
+  //   let data = {
+  //     customerId: app.customerID,
+  //     applicationId: app.applicationId,
+  //   };
+
+  //   const options = {
+  //     successCallBack: (res: any) => {
+  //       if (res.getMandateDetailsRespList.length > 0) {
+  //         let activeMandate = false;
+  //         res.getMandateDetailsRespList.forEach((item: any) => {
+  //           if (item.supermoneyStatus == "ACTIVE" || item.supermoneyStatus == "IN PROCESS") {
+  //             activeMandate = true;
+  //           }
+  //         });
+  //         setActiveMandateFlag(activeMandate);
+  //       } else {
+  //         setActiveMandateFlag(false);
+  //       }
+  //       dispatch(routeChange('end'));
+  //     },
+  //     failureCallBack: (error: any) => {
+  //       console.log("display  ==" + error);
+  //       dispatch(routeChange('end'));
+  //     }
+  //   }
+  //   makeAPIPOSTRequest('/mandate-services/mandate/digio/details/get', {}, data, options);
+  // };
+
   // Progress circle component
-  const ProgressCircle: React.FC<{ percentage: number; available: number; total: number }> = ({ 
-    percentage, 
-    available, 
-    total 
+  const ProgressCircle: React.FC<{ percentage: number; available: number; total: number }> = ({
+    percentage,
+    available,
+    total
   }) => (
     <div className="relative w-24 h-24">
       <svg className="w-full h-full" viewBox="0 0 100 100">
@@ -233,9 +885,9 @@ export const UpFrontLanding: React.FC = () => {
         {/* Landing Card */}
         {landingCard && (
           <div className="bg-[#f7f5ff] rounded-2xl mx-4 mt-6 mb-5 shadow-lg">
-            <img 
-              src={upFrontBanner} 
-              alt="banner" 
+            <img
+              src={upFrontBanner}
+              alt="banner"
               className="w-full -mt-7"
             />
             <div className="p-4">
@@ -289,19 +941,17 @@ export const UpFrontLanding: React.FC = () => {
                 {onboardingSteps.map((item, index) => (
                   <div
                     key={index}
-                    className={`rounded-xl p-2 h-fit flex items-center my-2 ${
-                      item.type === 0 
-                        ? 'border border-[#d1c4e9]' 
-                        : item.type === 1 
-                        ? 'border border-[#7e67da] cursor-pointer' 
-                        : 'border border-[#d1c4e9]'
-                    }`}
-                    onClick={item.type === 1 ? workFlowStatus : undefined}
+                    className={`rounded-xl p-2 h-fit flex items-center my-2 ${item.type === 0
+                        ? 'border border-[#d1c4e9]'
+                        : item.type === 1
+                          ? 'border border-[#7e67da] cursor-pointer'
+                          : 'border border-[#d1c4e9]'
+                      }`}
+                    onClick={item.type === 1 ? () => workFlowStatus() : undefined}
                   >
-                    <span className={`mr-2 ${
-                      item.type === 0 ? 'text-green-500' : 
-                      item.type === 1 ? 'text-[#7E67DA]' : 'text-[#BDBDBD]'
-                    }`}>
+                    <span className={`mr-2 ${item.type === 0 ? 'text-green-500' :
+                        item.type === 1 ? 'text-[#7E67DA]' : 'text-[#BDBDBD]'
+                      }`}>
                       ●
                     </span>
                     <div className="w-3/4 text-left text-xs text-gray-600">
@@ -383,10 +1033,10 @@ export const UpFrontLanding: React.FC = () => {
                   </div>
                 </div>
                 <div className="w-1/3">
-                  <ProgressCircle 
-                    percentage={availablePercentage} 
-                    available={availableLimit} 
-                    total={totalLimit} 
+                  <ProgressCircle
+                    percentage={availablePercentage}
+                    available={availableLimit}
+                    total={totalLimit}
                   />
                 </div>
               </div>
@@ -394,7 +1044,7 @@ export const UpFrontLanding: React.FC = () => {
               <div className="flex items-start mt-2">
                 <span className="text-[#7E67DA] mr-2 mt-1">ℹ</span>
                 <span className="text-xs leading-relaxed">
-                  Please provide invoices to <b>{store.getters.onboardingName}</b> to utilize this limit.
+                  Please provide invoices to <b>{app.onboardingName}</b> to utilize this limit.
                 </span>
               </div>
               <button
@@ -472,10 +1122,10 @@ export const UpFrontLanding: React.FC = () => {
                   </div>
                 </div>
                 <div className="w-1/3">
-                  <ProgressCircle 
-                    percentage={availablePercentage} 
-                    available={availableLimit} 
-                    total={totalLimit} 
+                  <ProgressCircle
+                    percentage={availablePercentage}
+                    available={availableLimit}
+                    total={totalLimit}
                   />
                 </div>
               </div>
@@ -502,10 +1152,10 @@ export const UpFrontLanding: React.FC = () => {
                   </div>
                 </div>
                 <div className="w-1/3">
-                  <ProgressCircle 
-                    percentage={availablePercentage} 
-                    available={availableLimit} 
-                    total={totalLimit} 
+                  <ProgressCircle
+                    percentage={availablePercentage}
+                    available={availableLimit}
+                    total={totalLimit}
                   />
                 </div>
               </div>
@@ -573,22 +1223,20 @@ export const UpFrontLanding: React.FC = () => {
                     <div>
                       <span className="text-sm font-bold">KYC Verification</span>
                       <br />
-                      <span className={`inline-block px-2 py-1 rounded text-xs ${
-                        kycStatus === 'Approved' ? 'bg-green-100 text-green-800' :
-                        kycStatus === 'Rejected' ? 'bg-red-100 text-red-800' :
-                        'bg-orange-100 text-orange-800'
-                      }`}>
+                      <span className={`inline-block px-2 py-1 rounded text-xs ${kycStatus === 'Approved' ? 'bg-green-100 text-green-800' :
+                          kycStatus === 'Rejected' ? 'bg-red-100 text-red-800' :
+                            'bg-orange-100 text-orange-800'
+                        }`}>
                         {kycStatus}
                       </span>
                     </div>
                     <div className="mt-6">
                       <span className="text-sm font-bold">Credit Approval</span>
                       <br />
-                      <span className={`inline-block px-2 py-1 rounded text-xs ${
-                        creditStatus === 'Approved' ? 'bg-green-100 text-green-800' :
-                        creditStatus === 'Rejected' ? 'bg-red-100 text-red-800' :
-                        'bg-orange-100 text-orange-800'
-                      }`}>
+                      <span className={`inline-block px-2 py-1 rounded text-xs ${creditStatus === 'Approved' ? 'bg-green-100 text-green-800' :
+                          creditStatus === 'Rejected' ? 'bg-red-100 text-red-800' :
+                            'bg-orange-100 text-orange-800'
+                        }`}>
                         {creditStatus}
                       </span>
                     </div>

@@ -185,7 +185,7 @@ export const LoginWithPin: React.FC = () => {
     // }
     dispatch(routeChange('start'))
     const data = {
-      customerId: app.customerID,
+      customerId: +app.customerID!, 
       programId: programID,
     };
 
@@ -219,7 +219,7 @@ export const LoginWithPin: React.FC = () => {
       dispatch(routeChange('start'));
 
     const data = {
-      customerId: app.customerID,
+      customerId: +app.customerID!,
       profileId: app.profileID,
       programId: programID,
       createdBy: "Self",
