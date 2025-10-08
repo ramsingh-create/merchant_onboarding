@@ -4,7 +4,7 @@ import getcash from "../../assets/images/getcash.png";
 import tandclogo from "../../assets/images/tandclogo.png";
 import { CircleX, TriangleAlert } from 'lucide-react';
 import axios from 'axios'
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { 
@@ -22,6 +22,8 @@ export const LoginWithPin: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const app = useSelector((state: RootState) => state.app);
+  const [searchParams] = useSearchParams();
+
 
   // State variables
   const [alert, setAlert] = useState(false);
@@ -110,6 +112,7 @@ export const LoginWithPin: React.FC = () => {
 
   // Login function
   const loginByPin = () => {
+    localStorage.setItem("activeTab", "home")
     if (
       mobno !== "" &&
       loginPin !== "" &&
@@ -133,8 +136,7 @@ export const LoginWithPin: React.FC = () => {
           dispatch(setCustomerID(res.user.customerId));
           
           // Check if there's a request ID in URL and proceed accordingly
-          const urlParams = new URLSearchParams(window.location.search);
-          const requestID = urlParams.get('requestID');
+          const requestID = searchParams.get('requestID');
           
           if (requestID) {
             getProgramDetails(requestID);
@@ -255,7 +257,7 @@ export const LoginWithPin: React.FC = () => {
 
         if (JSONData.successFlag) {
           setMobno(JSONData.data[0].phone_number);
-          const search = new URLSearchParams(window.location.search).get("requestID")
+          const search = searchParams.get("requestID")
           if (
             search &&
             (search == "Klsafpfalqx02uljlderkD82" ||

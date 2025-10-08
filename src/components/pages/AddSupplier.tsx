@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { routeChange } from '../../store/appSlice';
@@ -19,6 +19,8 @@ const AddSupplier: React.FC = () => {
 
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const [searchParams] = useSearchParams();
+
     const app = useSelector((state: RootState) => state.app);
 
     // Validation rules
@@ -55,9 +57,8 @@ const AddSupplier: React.FC = () => {
 
     useEffect(() => {
         dispatch(routeChange("end"));
-        const queryParams = new URLSearchParams(window.location.search);
-        setBorrowerId(queryParams.get('borrowerId') || '');
-        setAvailableLimit(queryParams.get('availableLimit') || '');
+        setBorrowerId(searchParams.get('borrowerId') || '');
+        setAvailableLimit(searchParams.get('availableLimit') || '');
     }, [dispatch]);
 
     // Validation functions
@@ -108,7 +109,7 @@ const AddSupplier: React.FC = () => {
                                 email: email,
                                 borrowerId: borrowerId,
                                 availableLimit: availableLimit,
-                                applicationId: new URLSearchParams(window.location.search).get('applicationId') || '',
+                                applicationId: searchParams.get('applicationId') || '',
                             }).toString()
                         });
                     } else {

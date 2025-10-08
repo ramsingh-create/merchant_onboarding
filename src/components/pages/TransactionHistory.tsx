@@ -1,6 +1,6 @@
 // TransactionHistory.tsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Phone, ChevronDown, Download } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
@@ -33,6 +33,8 @@ export const TransactionHistory: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const app = useSelector((state: RootState) => state.app);
+  const [searchParams] = useSearchParams();
+
 
   const [transactionList, setTransactionList] = useState<TransactionItem[]>([]);
   const [applicationList, setApplicationList] = useState<ApplicationItem[]>([]);
@@ -286,7 +288,7 @@ export const TransactionHistory: React.FC = () => {
     
     const request = {
     //   customerId: app.customerID, //qy
-      customerId: new URLSearchParams(window.location.search).get('customerId'), 
+      customerId: searchParams.get('customerId'), 
       applicationId: applicationId,
     };
 
@@ -338,7 +340,7 @@ export const TransactionHistory: React.FC = () => {
     dispatch(routeChange('start'));
 
     const request = {
-      customerId: new URLSearchParams(window.location.search).get('customerId'),  // qy
+      customerId: searchParams.get('customerId'),  // qy
     };
 
     const options = {

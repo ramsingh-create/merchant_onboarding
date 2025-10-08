@@ -1,7 +1,7 @@
 import React from 'react';
 import logo from './logo.svg';
 import './App.css';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from './store/store';
 import { useDispatch } from 'react-redux';
@@ -42,6 +42,10 @@ import UploadInvoice from './components/pages/UploadInvoice';
 import AddInvoice from './components/pages/AddInvoice';
 import AllInvoices from './components/pages/AllInvoices';
 import AddSupplier from './components/pages/AddSupplier';
+import GetAndroidData from './components/pages/GetAndroidData';
+import LoanAgreementInvoice from './components/pages/LoanAgreementInvoice';
+import InvoiceSuccess from './components/pages/InvoiceSuccess';
+import BankDetails from './components/pages/BankDetails';
 function App() {
   const mode = useSelector((state: RootState) => state.theme.mode);
   const dispatch = useDispatch();
@@ -68,6 +72,7 @@ function App() {
           <Route path='/ChooseFinancePlan' element={<ChooseFinancePlan />} />
           <Route path='/RecentInvoice' element={<RecentInvoices />} />
           <Route path='/RewardsTransactionList' element={<RewardsTransactionList />} />
+          <Route path='/getAndroidData' element={<GetAndroidData />} />
           <Route path='/AllInvoices' element={<AllInvoices />} />
           <Route path='/' element={<Drawer />}>
             <Route path='UpFrontLanding' element={<UpFrontLanding />} /> {/* Remove leading slash */}
@@ -87,6 +92,9 @@ function App() {
             <Route path='/UploadInvoice' element={<UploadInvoice />} />
             <Route path='/AddInvoice' element={<AddInvoice />} />
             <Route path='/AddSupplier' element={<AddSupplier />} />
+            <Route path='/LoanAgreementInvoice' element={<LoanAgreementInvoice />} />
+            <Route path='/InvoiceSuccess' element={<InvoiceSuccess />} />
+            <Route path='/BankDetails' element={<BankDetails />} />
           </Route>
         </Routes>
       </Router>

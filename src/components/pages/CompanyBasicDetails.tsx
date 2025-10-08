@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import shop from "../../assets/images/shop.png";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { routeChange, setAuthToken } from '../../store/appSlice';
@@ -16,6 +16,7 @@ export const CompanyBasicDetails = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const app = useSelector((state: RootState) => state.app);
+  const [searchParams] = useSearchParams();
 
   const [alert, setAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
@@ -351,8 +352,8 @@ export const CompanyBasicDetails = () => {
       finalUpdate: true,
       companyName: app.companyName,
       onboardingPartner: app.onboardingName,
-      companyType: new URLSearchParams(window.location.search).get('entityType') || '', 
-      businessType: new URLSearchParams(window.location.search).get('businessType') || '',
+      companyType: searchParams.get('entityType') || '', 
+      businessType: searchParams.get('businessType') || '',
     };
 
     const data = { customerData };

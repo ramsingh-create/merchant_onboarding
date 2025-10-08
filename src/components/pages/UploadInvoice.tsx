@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Upload, Download, Archive, X, CheckCircle } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { routeChange, setAuthToken } from '../../store/appSlice';
@@ -47,7 +47,7 @@ const UploadInvoice: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const app = useSelector((state: RootState) => state.app);
-    const searchParams = new URLSearchParams(window.location.search);
+    const [searchParams] = useSearchParams();
 
     const downloadImg = () => {
         if (docSeqId != null) {
@@ -106,9 +106,9 @@ const UploadInvoice: React.FC = () => {
         const data = {
             invoiceType: "createInvoice",
             request: {
-                companyName: new URLSearchParams(window.location.search).get('companyName'),
-                supplierId: new URLSearchParams(window.location.search).get('supplierId'),
-                borrowerId: new URLSearchParams(window.location.search).get('borrowerId'),
+                companyName:searchParams.get('companyName'),
+                supplierId: searchParams.get('supplierId'),
+                borrowerId: searchParams.get('borrowerId'),
                 purchaseOrderNumber: invoiceNumber,
                 invoiceAmount: invoiceAmount,
                 invoiceDate: moment(date).format("YYYY-MM-DD"),
@@ -160,11 +160,11 @@ const UploadInvoice: React.FC = () => {
                             invoiceIDSent: responseData.data.details.invoiceId,
                             invoiceID: invoiceNumber,
                             invoiceAmount: invoiceAmount,
-                            supplier: new URLSearchParams(window.location.search).get('supplierName') || '',
-                            supplierID: new URLSearchParams(window.location.search).get('supplierId') || '',
+                            supplier: searchParams.get('supplierName') || '',
+                            supplierID: searchParams.get('supplierId') || '',
                             invoiceDate: date,
                             docSeqId: docSeqId,
-                            applicationId: new URLSearchParams(window.location.search).get('applicationId') || '',
+                            applicationId: searchParams.get('applicationId') || '',
                             fileType: fileType,
                         }).toString()
                     });
@@ -229,7 +229,7 @@ const UploadInvoice: React.FC = () => {
                     docStatus: "N",
                     docTypeId: docTypeId,
                     docURL: fileLocation,
-                    applicationId: new URLSearchParams(window.location.search).get('applicationId'),
+                    applicationId: searchParams.get('applicationId'),
                 },
             ],
         };

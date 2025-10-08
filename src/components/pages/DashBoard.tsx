@@ -400,7 +400,7 @@ const DashBoard: React.FC = () => {
                     if (response.borrowerId === "") {
                         createBorrower(applicationId, response.panNumber);
                     }
-                    stagesFetchCredit(applicationId, response.borrowerId)
+                    // stagesFetchCredit(applicationId, response.borrowerId)
                 } else {
                     setAlertMessage(response.errorMessage);
                     setAlert(true);

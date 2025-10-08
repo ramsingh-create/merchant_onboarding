@@ -1,6 +1,6 @@
 // AllTransactions.tsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Phone, ChevronDown, Download, Search } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
@@ -31,6 +31,7 @@ export const AllTransactions: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const app = useSelector((state: RootState) => state.app);
+  const [searchParams] = useSearchParams();
 
   const [transactionList, setTransactionList] = useState<TransactionItem[]>([]);
   const [applicationList, setApplicationList] = useState<ApplicationItem[]>([]);
@@ -111,7 +112,7 @@ export const AllTransactions: React.FC = () => {
 
   const fetchApplicationId = () => {
     const request = {
-      customerId: new URLSearchParams(window.location.search).get('customerId'),
+      customerId: searchParams.get('customerId'),
     };
 
     // console.log("Nitin==");
@@ -121,7 +122,7 @@ export const AllTransactions: React.FC = () => {
         const applicationList = res.getCustomerApplicationResponseList || [];
         setApplicationList(applicationList);
         if (applicationList.length > 0) {
-          const appselect = applicationList.find((item: any) => item.applicationId == new URLSearchParams(window.location.search).get('applicationId'))
+          const appselect = applicationList.find((item: any) => item.applicationId == searchParams.get('applicationId'))
           setApplicationSelected(appselect);
           setTimeout(() => {
             fetchTransaction(appselect);

@@ -1,7 +1,7 @@
 // PanDetails.tsx
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Calendar, Phone, MessageCircle, Mail } from 'lucide-react';
 import { RootState } from '../../store/store';
 import { routeChange, setAuthToken } from '../../store/appSlice';
@@ -40,6 +40,8 @@ export const PanDetails: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const app = useSelector((state: RootState) => state.app);
+  const [searchParams] = useSearchParams();
+
 
   const [state, setState] = useState<PanDetailsState>({
     panNumber: '',
@@ -439,9 +441,9 @@ export const PanDetails: React.FC = () => {
           onboardingPartner: app.onboardingName,
           companyName: app.companyName,
           email: state.emailAddress,
-          businessType: new URLSearchParams(window.location.search).get('businessType'),
+          businessType: searchParams.get('businessType'),
           applicationId: app.applicationId,
-          referenceId: state.storeID === '0' || !state.storeID ? '' : new URLSearchParams(window.location.search).get('storeID'),
+          referenceId: state.storeID === '0' || !state.storeID ? '' : searchParams.get('storeID'),
           upFrontBorrowerRequired: state.borrowerDetailsUpFrontRequired,
           updateProfile: true,
         },

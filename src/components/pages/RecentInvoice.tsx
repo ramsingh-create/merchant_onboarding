@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, CircleX, TriangleAlert } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
@@ -19,6 +19,8 @@ export const RecentInvoices = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const app = useSelector((state: RootState) => state.app);
+  const [searchParams] = useSearchParams();
+
   
   const [alert, setAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
@@ -39,7 +41,7 @@ export const RecentInvoices = () => {
       countTo: 20,
       companyName: app.companyName,
       // borrowerId: self.$route.query.borrowerId,
-      borrowerId: new URLSearchParams(window.location.search).get('borrowerId'),
+      borrowerId: searchParams.get('borrowerId'),
     };
 
     const options = {
@@ -113,7 +115,7 @@ export const RecentInvoices = () => {
     // });
 
     const queryParams = new URLSearchParams({
-      borrowerId: new URLSearchParams(window.location.search).get('borrowerId') || '',
+      borrowerId: searchParams.get('borrowerId') || '',
       applicationId: app?.applicationId || '',
     });
 

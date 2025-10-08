@@ -2,6 +2,7 @@
   "name": "merchant_onboarding",
   "version": "0.1.0",
   "private": true,
+  "homepage": "/IFUat",
   "dependencies": {
     "@reduxjs/toolkit": "^2.9.0",
     "@testing-library/dom": "^10.4.1",

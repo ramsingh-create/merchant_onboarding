@@ -209,8 +209,9 @@ const Rewards: React.FC = () => {
                     resolve(res); // ✅ resolve the promise with response
                 },
                 failureCallBack: (err: any) => {
-                    console.error('Failed to fetch cashback details:', err);
-                    reject(err); // ✅ reject the promise on error
+                    console.error('Failed to fetch cashback details:', err.message);
+                    dispatch(routeChange('end'))
+                    // reject(err); // ✅ reject the promise on error
                 }
             };
 
@@ -248,6 +249,7 @@ const Rewards: React.FC = () => {
             },
             failureCallBack: (err: any) => {
                 console.error('Failed to fetch reward details:', err);
+                dispatch(routeChange('end'))
             }
         };
 
